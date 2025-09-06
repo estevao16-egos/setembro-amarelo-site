@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Setembro Amarelo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    :root{
+      --yellow:#fdd835;
+      --yellow-strong:#ffeb3b;
+      --bg1:#1a1a1a;
+      --bg2:#2c2c2c;
+      --card-bg: rgba(50,50,50,0.92);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      font-family:"Inter",system-ui,Arial,Helvetica,sans-serif;
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      color:#f0f0f0;
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      overflow:hidden;
+      animation: background-shift 10s infinite alternate;
+    }
+
+    @keyframes background-shift{
+      0%{background:linear-gradient(135deg,var(--bg1),var(--bg2))}
+      100%{background:linear-gradient(135deg,#202020,#323232)}
+    }
+
+    .container{
+      width:100%;
+      max-width:600px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:18px;
+    }
+
+    .ribbon-image{
+      width:86px;
+      height:auto;
+      margin-top:6px;
+      animation: ribbon-anim 4s infinite ease-in-out;
+    }
+    @keyframes ribbon-anim{
+      0%,100%{transform:scale(1) rotate(0deg); filter:drop-shadow(0 0 6px rgba(253,216,53,0.45))}
+      50%{transform:scale(1.08) rotate(2deg); filter:drop-shadow(0 0 22px rgba(253,216,53,0.8))}
+    }
+
+    .card{
+      width:100%;
+      background: var(--card-bg);
+      border-radius:18px;
+      border: 2px solid rgba(250,230,130,0.08);
+      padding:28px;
+      position:relative;
+      min-height:180px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5), inset 0 0 20px rgba(253,216,53,0.03);
+      overflow:hidden;
+    }
+
+    /* glow suave (pulsante) */
+    @keyframes card-glow{
+      0%{box-shadow:0 6px 20px rgba(0,0,0,0.45), inset 0 0 8px rgba(253,216,53,0.03)}
+      100%{box-shadow:0 10px 40px rgba(0,0,0,0.6), inset 0 0 28px rgba(253,216,53,0.08)}
+    }
+    .card { animation: card-glow 4s infinite alternate; }
+
+    .message-text{
+      font-size:1.18rem;
+      line-height:1.5;
+      text-align:center;
+      margin:0 6px 8px;
+      color:#fff;
+      opacity:0;
+      transform:translateY(18px) scale(0.995);
+      transition: opacity .55s cubic-bezier(.2,.9,.2,1), transform .55s cubic-bezier(.2,.9,.2,1);
+      max-width:100%;
+      word-wrap:break-word;
+    }
+
+    .message-text.show{
+      opacity:1;
+      transform:translateY(0) scale(1);
+    }
+
+    .meta-row{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:8px;
+    }
+
+    .counter{
+      color: #f7f3d6;
+      font-weight:600;
+      font-size:0.95rem;
+      opacity:0.95;
+    }
+
+    /* controles: prev - play - next (centralizados) */
+    .controls{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:center;
+      margin-top:8px;
+      width:100%;
+    }
+
+    .btn{
+      background:var(--yellow);
+      border:none;
+      color: #111;
+      width:50px;
+      height:50px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-weight:700;
+      font-size:1.05rem;
+      box-shadow:0 6px 18px rgba(253,216,53,0.2);
+      transition: transform .18s ease, box-shadow .18s ease, background .12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:hover{ transform:translateY(-4px) scale(1.07); background:var(--yellow-strong); box-shadow:0 10px 30px rgba(253,216,53,0.32) }
+    .btn:active{ transform:scale(.96) }
+
+    .play-btn{
+      width:56px; height:56px; font-size:1.05rem;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* ícones simples (texto) */
+    .btn svg{ width:20px; height:20px; display:block; }
+
+    /* responsividade */
+    @media (max-width:480px){
+      .container{ padding:6px; max-width:420px }
+      .ribbon-image{ width:64px }
+      .card{ padding:18px; border-radius:14px; min-height:150px }
+      .message-text{ font-size:1rem }
+      .btn{ width:44px; height:44px; font-size:1rem }
+      .play-btn{ width:48px; height:48px }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <img src="./img/laço_amarelo.png" alt="Laço Amarelo" class="ribbon-image" />
+
+    <div class="card" id="card" aria-live="polite">
+      <p class="message-text" id="message-text" role="text"></p>
+
+      <div class="meta-row" aria-hidden="true">
+        <div></div>
+        <div class="counter" id="counter">1/20</div>
+      </div>
+
+      <div class="controls" role="toolbar" aria-label="Navegação de frases">
+        <button class="btn prev-btn" id="prev-btn" aria-label="Frase anterior">&lt;</button>
+
+        <button class="btn play-btn" id="play-btn" aria-pressed="true" aria-label="Pausar autoplay">
+          <!-- ícone vai ser atualizado via JS -->
+          ❚❚
+        </button>
+
+        <button class="btn next-btn" id="next-btn" aria-label="Próxima frase">&gt;</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const phrases = [
+        "🌟 Você é mais forte do que imagina. Cada dia é uma nova chance.",
+        "💛 Setembro Amarelo: falar é a melhor solução. Sua voz importa!",
+        "🌈 Nunca subestime o poder de pedir ajuda. Você não está só.",
+        "✨ A vida é um presente. Permita-se viver cada momento.",
+        "🌻 Você faz diferença neste mundo. Sua existência importa!",
+        "🌟 Sempre haverá alguém disposto a te ouvir. Dê esse passo.",
+        "💛 Seu sorriso ilumina mais do que você imagina.",
+        "🌈 Cada amanhecer é uma nova oportunidade para recomeçar.",
+        "✨ Não tenha medo de ser vulnerável, pedir ajuda é coragem.",
+        "🌻 Sua vida é única e insubstituível.",
+        "🌟 Compartilhe seus sentimentos, você não precisa carregar sozinho.",
+        "💛 Esperança é a luz que guia nos dias escuros.",
+        "🌈 Lembre-se: até a noite mais longa tem um amanhecer.",
+        "✨ Você é amado, mesmo quando não sente isso.",
+        "🌻 Seu valor não diminui pelas dificuldades que enfrenta.",
+        "🌟 Há beleza em continuar, mesmo quando tudo parece difícil.",
+        "💛 Uma conversa pode salvar vidas – talvez até a sua.",
+        "🌈 Você merece cuidado, amor e respeito.",
+        "✨ Não desista, o amanhã pode trazer algo incrível.",
+        "🌻 O simples fato de você existir já torna o mundo melhor."
+      ];
+
+      // elementos
+      const messageEl = document.getElementById('message-text');
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      const playBtn = document.getElementById('play-btn');
+      const counterEl = document.getElementById('counter');
+      const card = document.getElementById('card');
+
+      // estado
+      let index = 0;
+      let autoplay = true;           // iniciar com autoplay ON
+      const intervalMs = 5000;       // 5s
+      let timerId = null;
+
+      function render() {
+        // efeito: remove classe, espera 180ms, troca texto e adiciona show
+        messageEl.classList.remove('show');
+        // atualizar contador imediatamente para percepção
+        counterEl.textContent = `${index+1}/${phrases.length}`;
+
+        setTimeout(() => {
+          messageEl.textContent = phrases[index];
+          messageEl.classList.add('show');
+        }, 200);
+      }
+
+      function next() {
+        index = (index + 1) % phrases.length;
+        render();
+      }
+      function prev() {
+        index = (index - 1 + phrases.length) % phrases.length;
+        render();
+      }
+
+      function startAutoplay() {
+        if (timerId) return;
+        if (!autoplay) return;
+        timerId = setInterval(() => {
+          next();
+        }, intervalMs);
+        updatePlayButton();
+      }
+
+      function stopAutoplay() {
+        if (timerId) {
+          clearInterval(timerId);
+          timerId = null;
+        }
+      }
+
+      function resetAutoplay() {
+        stopAutoplay();
+        if (autoplay) startAutoplay();
+      }
+
+      function toggleAutoplay() {
+        autoplay = !autoplay;
+        if (autoplay) startAutoplay();
+        else stopAutoplay();
+        updatePlayButton();
+      }
+
+      function updatePlayButton(){
+        // muda ícone e aria
+        if (autoplay && timerId) {
+          playBtn.innerHTML = '❚❚'; // pause icon
+          playBtn.setAttribute('aria-label','Pausar autoplay');
+          playBtn.setAttribute('aria-pressed','true');
+        } else if (autoplay && !timerId) {
+          // caso autoplay true mas timer não iniciado (rare)
+          playBtn.innerHTML = '▶';
+          playBtn.setAttribute('aria-label','Iniciar autoplay');
+          playBtn.setAttribute('aria-pressed','false');
+        } else {
+          playBtn.innerHTML = '▶'; // play icon
+          playBtn.setAttribute('aria-label','Iniciar autoplay');
+          playBtn.setAttribute('aria-pressed','false');
+        }
+      }
+
+      // eventos dos botões
+      nextBtn.addEventListener('click', () => { next(); resetAutoplay(); btnBounce(nextBtn); });
+      prevBtn.addEventListener('click', () => { prev(); resetAutoplay(); btnBounce(prevBtn); });
+      playBtn.addEventListener('click', () => { toggleAutoplay(); btnBounce(playBtn); });
+
+      // pausa autoplay enquanto o usuário interage (hover em desktop / touchstart mobile)
+      card.addEventListener('mouseenter', () => { stopAutoplay(); updatePlayButton(); });
+      card.addEventListener('mouseleave', () => { if (autoplay) startAutoplay(); updatePlayButton(); });
+
+      // para touch devices: ao tocar no card pausamos temporariamente, ao soltar retomamos se autoplay=true
+      card.addEventListener('touchstart', () => { stopAutoplay(); });
+      card.addEventListener('touchend', () => { if (autoplay) startAutoplay(); });
+
+      // efeito visual ao clicar (pequeno "pulo")
+      function btnBounce(el){
+        el.style.transform = 'translateY(-6px) scale(1.03)';
+        setTimeout(()=>{ el.style.transform = ''; }, 160);
+      }
+
+      // iniciar
+      render();
+      updatePlayButton();
+      startAutoplay();
+
+      // acessibilidade: permitir setas do teclado
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') { next(); resetAutoplay(); }
+        if (e.key === 'ArrowLeft') { prev(); resetAutoplay(); }
+        if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); toggleAutoplay(); }
+      });
+    });
+  </script>
+</body>
+</html>
